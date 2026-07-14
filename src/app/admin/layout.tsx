@@ -37,6 +37,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Search className="h-4 w-4 shrink-0" />
             <span className="truncate">搜索工具、模块、数据指标</span>
           </div>
+          <Link
+            href="/admin/accounting"
+            className="shrink-0 rounded-md border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted lg:hidden"
+          >
+            记账
+          </Link>
           <div className="shrink-0 text-sm font-medium">管理员</div>
         </header>
         {children}
