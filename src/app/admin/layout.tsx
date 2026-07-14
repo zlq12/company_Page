@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Building2, Home, Search } from "lucide-react";
+import { AdminMobileNav } from "@/components/admin-mobile-nav";
 import { portalModules } from "@/config/modules";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -12,10 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
           瑞祺腾炟管理门户
         </Link>
-        <Link
-          href="/"
-          className="mb-6 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-        >
+        <Link href="/" className="mb-6 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted">
           <Home className="h-4 w-4" />
           公司首页
         </Link>
@@ -33,12 +31,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
       </aside>
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
-          <div className="flex h-10 w-full max-w-md items-center gap-2 rounded-md border bg-card px-3 text-sm text-muted-foreground">
-            <Search className="h-4 w-4" />
-            搜索工具、模块、数据指标
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-3 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+          <AdminMobileNav />
+          <div className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border bg-card px-3 text-sm text-muted-foreground lg:max-w-md">
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate">搜索工具、模块、数据指标</span>
           </div>
-          <div className="ml-4 text-sm font-medium">管理员</div>
+          <div className="shrink-0 text-sm font-medium">管理员</div>
         </header>
         {children}
       </div>
