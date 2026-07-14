@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Building2, Home, Menu, X } from "lucide-react";
-import { portalModules } from "@/config/modules";
 import { Button } from "@/components/ui/button";
+import { portalModules } from "@/config/modules";
 
 export function AdminMobileNav() {
   const [open, setOpen] = useState(false);
@@ -26,8 +26,8 @@ export function AdminMobileNav() {
       </Button>
       {open ? (
         <div className="fixed inset-0 z-50">
-          <button className="absolute inset-0 bg-foreground/30" type="button" aria-label="关闭后台菜单" onClick={close} />
-          <aside className="absolute inset-y-0 left-0 w-80 max-w-[86vw] border-r bg-card px-4 py-5 shadow-soft">
+          <button className="absolute inset-0 z-0 bg-foreground/30" type="button" aria-label="关闭后台菜单" onClick={close} />
+          <aside className="absolute inset-y-0 left-0 z-10 w-80 max-w-[86vw] overflow-y-auto border-r bg-card px-4 py-5 shadow-soft">
             <div className="mb-4 flex items-center justify-between">
               <Link href="/admin" className="flex items-center gap-3 font-semibold" onClick={close}>
                 <span className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground">
