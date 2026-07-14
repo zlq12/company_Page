@@ -5,6 +5,21 @@ import { useState } from "react";
 import { Button, Input, Select } from "@/components/accounting/ui";
 import { activeInvestmentTypes, expenseCategoryLabels, investmentTypeLabels } from "@/lib/accounting/labels";
 
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function readError(response: Response, fallback: string) {
+  const text = await response.text();
+  if (!text) return fallback;
+  try {
+    const json = JSON.parse(text) as { error?: string };
+    return json.error || fallback;
+  } catch {
+    return text || fallback;
+  }
+}
+
 export function InvestmentForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -16,8 +31,7 @@ export function InvestmentForm() {
     const res = await fetch("/api/investments", { method: "POST", body: formData });
     setLoading(false);
     if (!res.ok) {
-      const payload = await res.json().catch(() => null);
-      setError(payload?.error || "保存失败，请检查投资信息和支付凭证。");
+      setError(await readError(res, "保存失败，请检查投资信息和支付凭证。"));
       return;
     }
     router.refresh();
@@ -39,7 +53,7 @@ export function InvestmentForm() {
         <option value="USD">USD</option>
       </Select>
       <Input name="exchangeRate" type="number" step="0.0001" placeholder="汇率，人民币可空" />
-      <Input name="date" type="date" required />
+      <Input name="date" type="date" defaultValue={today()} required />
       <Input name="purpose" placeholder="用途" />
       <Input name="note" placeholder="备注" />
       <label className="space-y-1 text-sm md:col-span-4">
@@ -65,8 +79,7 @@ export function ExpenseForm() {
     const res = await fetch("/api/expenses", { method: "POST", body: formData });
     setLoading(false);
     if (!res.ok) {
-      const payload = await res.json().catch(() => null);
-      setError(payload?.error || "保存失败，请检查支出信息和支付凭证。");
+      setError(await readError(res, "保存失败，请检查支出信息和支付凭证。"));
       return;
     }
     router.refresh();
@@ -74,7 +87,7 @@ export function ExpenseForm() {
 
   return (
     <form action={submit} className="grid gap-3 md:grid-cols-4">
-      <Input name="date" type="date" required />
+      <Input name="date" type="date" defaultValue={today()} required />
       <Select name="category">
         {Object.entries(expenseCategoryLabels).map(([value, label]) => (
           <option key={value} value={value}>

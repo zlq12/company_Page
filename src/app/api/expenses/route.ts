@@ -1,7 +1,9 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Currency, ExpenseCategory } from "@prisma/client";
 import { isAccountingDatabaseConfigured } from "@/lib/accounting/db-status";
+import { amountInBaseCurrency } from "@/lib/accounting/validators";
 import { prisma } from "@/lib/accounting/prisma";
+import { saveImageUpload } from "@/lib/accounting/upload";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +22,43 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
-    const expense = await prisma.expense.create({ data: expensePayload(body) });
+    const formData = await request.formData();
+    const image = formData.get("paymentImage");
+    if (!(image instanceof File) || image.size === 0) {
+      return NextResponse.json({ error: "请上传支付凭证图片" }, { status: 400 });
+    }
+
+    const body = Object.fromEntries(formData.entries());
+    const amount = Number(body.amount);
+    const currency = String(body.currency || "CNY") as Currency;
+    const exchangeRate = optionalNumber(body.exchangeRate);
+    const attachmentUrl = await saveImageUpload(image, "expenses");
+    const expense = await prisma.expense.create({
+      data: {
+        date: new Date(String(body.date)),
+        category: String(body.category) as ExpenseCategory,
+        amount,
+        currency,
+        exchangeRate,
+        amountInBaseCurrency: amountInBaseCurrency(amount, currency, exchangeRate ?? undefined),
+        payer: String(body.payer || ""),
+        description: String(body.description || ""),
+        subCategory: optionalString(body.subCategory),
+        paymentAccount: optionalString(body.paymentAccount),
+        relatedPartner: optionalString(body.relatedPartner),
+        relatedStore: optionalString(body.relatedStore),
+        relatedMarketplace: optionalString(body.relatedMarketplace),
+        relatedSku: optionalString(body.relatedSku),
+        relatedAsin: optionalString(body.relatedAsin),
+        relatedBatchNo: optionalString(body.relatedBatchNo),
+        supplier: optionalString(body.supplier),
+        note: optionalString(body.note),
+        attachmentUrl
+      }
+    });
     return NextResponse.json(expense);
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "鍒涘缓鏀嚭澶辫触" }, { status: 400 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "创建支出失败" }, { status: 400 });
   }
 }
 
@@ -41,7 +75,7 @@ export async function PUT(request: NextRequest) {
     });
     return NextResponse.json(expense);
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "鏇存柊鏀嚭澶辫触" }, { status: 400 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "更新支出失败" }, { status: 400 });
   }
 }
 
@@ -51,19 +85,22 @@ export async function DELETE(request: NextRequest) {
   }
 
   const id = request.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "缂哄皯璁板綍 ID" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "缺少记录 ID" }, { status: 400 });
   await prisma.expense.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
 
 function expensePayload(body: Record<string, unknown>) {
+  const amount = Number(body.amount);
+  const currency = String(body.currency || "CNY") as Currency;
+  const exchangeRate = optionalNumber(body.exchangeRate);
   return {
     date: new Date(String(body.date)),
     category: String(body.category) as ExpenseCategory,
-    amount: Number(body.amount),
-    currency: String(body.currency || "CNY") as Currency,
-    exchangeRate: optionalNumber(body.exchangeRate),
-    amountInBaseCurrency: Number(body.amountInBaseCurrency || body.amount),
+    amount,
+    currency,
+    exchangeRate,
+    amountInBaseCurrency: Number(body.amountInBaseCurrency || amountInBaseCurrency(amount, currency, exchangeRate ?? undefined)),
     payer: String(body.payer || ""),
     description: String(body.description || ""),
     subCategory: optionalString(body.subCategory),
